@@ -1,3 +1,14 @@
+-- Tải Orion Library
+local Orion = loadstring(game:HttpGet('https://raw.githubusercontent.com/Linhmcfake1/Orion-lib/main/Mobile'))()
+
+-- Tạo cửa sổ Orion
+local Window = Orion:MakeWindow({
+    Name = "Auto Farm Script", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "OrionTest"
+})
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -143,5 +154,49 @@ Players.LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
--- Bắt đầu chạy script ngay lập tức
+-- Tạo tab "Game"
+local Tab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Thêm nút bật/tắt vào tab
+Tab:AddButton({
+    Name = "Toggle Auto Farm",
+    Callback = function()
+        if isScriptActive then
+            stopScript()
+        else
+            init()
+        end
+    end
+})
+
+-- Thêm các nút khác vào tab nếu cần
+-- Ví dụ:
+Tab:AddButton({
+    Name = "Update",
+    Callback = function()
+        -- Thêm hành động nếu cần
+    end
+})
+
+Tab:AddButton({
+    Name = "Teleport to VIP Room",
+    Callback = function()     
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-108.00, 17634.06, 9020.00)
+        wait()
+    end
+})
+
+Tab:AddButton({
+    Name = "Teleport to Thumbnail Island",
+    Callback = function()     
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-21.291458129882812, 0.3889467120170593, -5553.3359375)
+        wait()
+    end
+})
+
+-- Khởi động script
 init()
