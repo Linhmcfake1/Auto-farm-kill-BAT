@@ -1,64 +1,20 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local scriptExecutedBefore = false
-
--- Kiểm tra nếu bảng đã được tạo trước đó
-if playerGui:FindFirstChild("ToolGui") then
-    scriptExecutedBefore = true
-end
-
--- Nếu chưa có bảng thì tạo bảng mới
-if not scriptExecutedBefore then
-    -- Tạo GUI và bảng thông báo
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "ToolGui"
-    screenGui.Parent = playerGui
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.8, 0, 0.3, 0)  -- Kích thước 80% chiều rộng, 30% chiều cao
-    frame.Position = UDim2.new(0.1, 0, 0.35, 0)  -- Ở giữa màn hình
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    frame.Parent = screenGui
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0.8, 0)
-    label.Position = UDim2.new(0, 0, 0.1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = "script by linhmc_new\nRejoin to stop this autofarm"
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextScaled = true
-    label.Parent = frame
-
-    local closeButton = Instance.new("TextButton")
-    closeButton.Size = UDim2.new(0.1, 0, 0.2, 0)
-    closeButton.Position = UDim2.new(0.9, 0, 0, 0)  -- Đặt ở góc phải trên của bảng
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    closeButton.Text = "X"
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.TextScaled = true
-    closeButton.Parent = frame
-
-    closeButton.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
-end
-
+-- Biến trạng thái script
+local isScriptActive = false
+local connection, handleKillConnection
 local playerCharacter
 
-local isScriptActive = true
-local isScriptRunning = false
-local connection
-local handleKillConnection
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Hàm kiểm tra xem người chơi có phải là bạn bè không
+-- Hàm kiểm tra nếu người chơi là bạn
 local function isFriend(targetPlayer)
     return player:IsFriendsWith(targetPlayer.UserId)
 end
 
--- Hàm handlekill để xử lý việc tiêu diệt tất cả người chơi khác, trừ bạn bè
+-- Hàm handlekill để xử lý tiêu diệt tất cả người chơi khác, trừ bạn bè
 local function handlekill()
     if not firetouchinterest then
         warn('Incompatible Exploit', 'Your exploit does not support this command (missing firetouchinterest)')
@@ -97,27 +53,27 @@ local function handlekill()
     end
 end
 
--- Hàm di chuyển nhân vật đến vị trí chỉ định và thực hiện các hành động khác
+-- Hàm di chuyển nhân vật và thực hiện các hành động khác
 local function startSequence()
     local character = playerCharacter
     local rootPart = character:WaitForChild("HumanoidRootPart")
 
-    -- Bước 1: Dịch chuyển đến vị trí chỉ định
+    -- Dịch chuyển đến vị trí chỉ định
     rootPart.CFrame = CFrame.new(-81.55941772460938, 17633.498046875, 9045.537109375)
     wait(2)
 
-    -- Bước 2: Di chuyển lên độ cao lớn và bắt đầu xoay
+    -- Di chuyển lên độ cao lớn và bắt đầu xoay
     local newHeight = 9999999
     rootPart.CFrame = CFrame.new(rootPart.Position.X, newHeight, rootPart.Position.Z)
 
-    -- Tạo một mặt phẳng lớn phía dưới toàn bộ bản đồ để ngăn không cho nhân vật rơi vào void
+    -- Tạo mặt phẳng lớn phía dưới toàn bộ bản đồ
     local Workspace = game:GetService("Workspace")
     local basePart = Instance.new("Part")
-    basePart.Size = Vector3.new(100000, 1, 100000) -- Kích thước lớn để bao phủ toàn bộ bản đồ
-    basePart.Position = Vector3.new(0, newHeight - 10000, 0) -- Đặt dưới toàn bộ bản đồ
-    basePart.Anchored = true -- Cố định vị trí của mặt phẳng
-    basePart.Transparency = 1 -- Vô hình
-    basePart.CanCollide = true -- Cho phép va chạm để giữ nhân vật không rơi xuống
+    basePart.Size = Vector3.new(100000, 1, 100000)
+    basePart.Position = Vector3.new(0, newHeight - 10000, 0)
+    basePart.Anchored = true
+    basePart.Transparency = 1
+    basePart.CanCollide = true
     basePart.Parent = Workspace
 
     -- Xoay quanh tọa độ cũ
@@ -127,7 +83,7 @@ local function startSequence()
     local orbitSpeed = (2 * math.pi) / orbitTime
     local startTime = tick()
 
-    -- Tắt trọng lực cho nhân vật để đảm bảo không rơi
+    -- Tắt trọng lực
     character:WaitForChild("Humanoid").PlatformStand = true
 
     local function getNewPosition(t)
@@ -139,7 +95,7 @@ local function startSequence()
 
     -- Kết nối với Heartbeat để liên tục di chuyển nhân vật
     connection = RunService.Heartbeat:Connect(function()
-        if not playerCharacter or not playerCharacter.Parent then
+        if not playerCharacter or not playerCharacter.Parent or not isScriptActive then
             connection:Disconnect()
             return
         end
@@ -149,7 +105,7 @@ local function startSequence()
         rootPart.CFrame = CFrame.new(newPosition.X, originalPosition.Y, newPosition.Z)
     end)
 
-    -- Bước 3: Thực hiện handlekill liên tục
+    -- Thực hiện handlekill liên tục
     handleKillConnection = RunService.Heartbeat:Connect(function()
         if isScriptActive then
             handlekill()
@@ -157,27 +113,50 @@ local function startSequence()
     end)
 end
 
--- Hàm khởi tạo lại script khi nhân vật hồi sinh
-local function init()
-    if isScriptRunning then
-        -- Nếu script đang chạy, thì dừng nó
-        isScriptActive = false
-        wait(2) -- Đợi một chút để chắc chắn script đã dừng hoàn toàn
-        if connection then connection:Disconnect() end
-        if handleKillConnection then handleKillConnection:Disconnect() end
+-- Hàm dừng script và dịch chuyển người chơi
+local function stopScript()
+    isScriptActive = false
+    if connection then connection:Disconnect() end
+    if handleKillConnection then handleKillConnection:Disconnect() end
+
+    -- Dịch chuyển người chơi đến tọa độ chỉ định khi tắt toggle
+    wait(0.1)
+    if playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
+        playerCharacter.HumanoidRootPart.CFrame = CFrame.new(-247.40415954589844, 59.06595230102539, 7.938275337219238)
+        -- Đảm bảo nhân vật có thể di chuyển bằng cách bật lại PlatformStand
+        playerCharacter:WaitForChild("Humanoid").PlatformStand = false
     end
+end
+
+-- Hàm khởi tạo lại script
+local function init()
     playerCharacter = player.Character or player.CharacterAdded:Wait()
     isScriptActive = true
     startSequence()
-    isScriptRunning = true
 end
 
--- Theo dõi sự kiện khi nhân vật hồi sinh và khởi động lại script
+-- Theo dõi sự kiện hồi sinh của nhân vật
 Players.LocalPlayer.CharacterAdded:Connect(function()
-    -- Đợi nhân vật hồi sinh hoàn toàn
-    wait(2)
-    init()
+    if toggleStatus then
+        wait(2)
+        init()
+    end
 end)
 
--- Bắt đầu chạy script ngay lập tức
-init()
+-- Thêm toggle vào tab chính
+local Tab = Window:MakeTab({Name = "Main"})
+
+Tab:AddToggle({
+    Name = "Run Auto Farm",
+    Default = false,
+    Callback = function(value)
+        toggleStatus = value
+        if toggleStatus then
+            init()  -- Bật script khi toggle bật
+        else
+            stopScript()  -- Dừng script và dịch chuyển khi toggle tắt
+        end
+    end
+})
+
+OrionLib:Init()
