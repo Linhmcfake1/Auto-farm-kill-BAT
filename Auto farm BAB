@@ -1,13 +1,12 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
--- Biến trạng thái script
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
 local isScriptActive = false
 local connection, handleKillConnection
 local playerCharacter
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 
 -- Hàm kiểm tra nếu người chơi là bạn
 local function isFriend(targetPlayer)
@@ -123,7 +122,8 @@ local function stopScript()
     wait(0.1)
     if playerCharacter and playerCharacter:FindFirstChild("HumanoidRootPart") then
         playerCharacter.HumanoidRootPart.CFrame = CFrame.new(-247.40415954589844, 59.06595230102539, 7.938275337219238)
-        -- Đảm bảo nhân vật có thể di chuyển bằng cách bật lại PlatformStand
+        
+        -- Đặt lại trọng lực để nhân vật có thể di chuyển
         playerCharacter:WaitForChild("Humanoid").PlatformStand = false
     end
 end
@@ -137,26 +137,11 @@ end
 
 -- Theo dõi sự kiện hồi sinh của nhân vật
 Players.LocalPlayer.CharacterAdded:Connect(function()
-    if toggleStatus then
+    if isScriptActive then
         wait(2)
         init()
     end
 end)
 
--- Thêm toggle vào tab chính
-local Tab = Window:MakeTab({Name = "Main"})
-
-Tab:AddToggle({
-    Name = "Run Auto Farm",
-    Default = false,
-    Callback = function(value)
-        toggleStatus = value
-        if toggleStatus then
-            init()  -- Bật script khi toggle bật
-        else
-            stopScript()  -- Dừng script và dịch chuyển khi toggle tắt
-        end
-    end
-})
-
-OrionLib:Init()
+-- Bắt đầu chạy script ngay lập tức
+init()
